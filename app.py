@@ -7,7 +7,7 @@ import json
 porta_serial = 'COM5'      # Substitua pela porta do seu Arduino
 baud_rate = 9600           # Deve ser igual ao Serial.begin do Arduino
 timeout = 1   
-url_webapp = "https://script.google.com/macros/s/AKfycbw7kyIW98QJZ-FmP7J8GDFA8Yol_y5PBcscV9E3-9Hf0EKxuwy0akXs0Cec9NFih-VI/exec"  
+url_webapp = "https://script.google.com/macros/s/AKfycbz_xI2lVPwKEbzKurk4Y5k7lk3UUYljqUauaI-MjONmlchQ1j0PAQe1rq9r4AY6-a7l/exec"  
 
 # -------- CONEXÃO SERIAL --------
 try:
@@ -98,5 +98,6 @@ while True:
         break
     except Exception as e:
         print(f"Erro durante a leitura: {e}")
+
 
 
