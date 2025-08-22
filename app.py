@@ -7,7 +7,7 @@ import json
 porta_serial = 'COM5'      # Substitua pela porta do seu Arduino
 baud_rate = 9600           # Deve ser igual ao Serial.begin do Arduino
 timeout = 1   
-url_webapp = "https://script.google.com/macros/s/AKfycbzgRuSc0w-G9BGv3HOUKER6Vdos9QbvhTvMvsaXoxaofTJx-PHt9MDcTet33aBjYi-z/exec"    
+url_webapp = "https://script.google.com/macros/s/AKfycbw7kyIW98QJZ-FmP7J8GDFA8Yol_y5PBcscV9E3-9Hf0EKxuwy0akXs0Cec9NFih-VI/exec"  
 
 # -------- CONEXÃO SERIAL --------
 try:
@@ -20,6 +20,7 @@ except Exception as e:
 chuva_ativa = False
 inicio_chuva = None
 fim_chuva = None
+duracao=None
 contador_passadas = 0
 
 volume_por_passada_ml = 5            # 5 mL por passada
@@ -43,8 +44,7 @@ def postar_dados(dados):
     except requests.RequestException as e:
         print("Erro ao enviar dados:", e)
 
-
-
+ 
 print("Aguardando eventos do Arduino...\n")
 
 
@@ -73,10 +73,14 @@ while True:
             print(contador_passadas)
 
             if (contador_passadas!= 0) and (fim_chuva - inicio_chuva) >= timedelta(seconds=30) :
+                duracao = fim_chuva - inicio_chuva
+                total_segundos = int(duracao.total_seconds())
+                duracao_str = f"{total_segundos//3600:02d}:{(total_segundos%3600)//60:02d}:{total_segundos%60:02d}"
                 resumoJson={
                         "inicio": inicio_chuva.strftime('%d/%m/%Y %H:%M:%S'),
                         "fim": fim_chuva.strftime('%d/%m/%Y %H:%M:%S'),
-                        "volume_mm": calcular_volume_mm(contador_passadas)
+                        "volume_mm": calcular_volume_mm(contador_passadas),
+                        "duracao": duracao_str
                 }
                 postar_dados(resumoJson)
             
@@ -96,103 +100,3 @@ while True:
         print(f"Erro durante a leitura: {e}")
 
 
-
-
-
-
-
-
-        ########################################################################
-        ####################
-
-
-
-
-
-# import serial
-# import time
-# import requests
-# from datetime import datetime
-# import math
-
-# # ----------------------------
-# # CONFIGURAÇÕES
-# # ----------------------------
-# porta_serial = "COM5"  # substitua pela sua porta
-# baud_rate = 9600
-# url_webapp = "https://script.google.com/macros/s/AKfycbzZKn1CWdYTgsJyOc_SwjfAeYRuGuekeNy-v8OPaTGtWgXArQ2unQortF5vanevH9W2/exec"  # URL do Apps Script
-
-# # Cada passada equivale a 5 mL de água
-# volume_por_passada_ml = 5
-
-# # Área de coleta em metros (10 cm de raio = 0,1 m)
-# raio_coleta_m = 0.1
-# area_coleta_m2 = math.pi * raio_coleta_m ** 2
-
-# # ----------------------------
-# # INICIALIZAÇÃO
-# # ----------------------------
-# ser = serial.Serial(porta_serial, baud_rate, timeout=1)
-# time.sleep(2)  # espera o Arduino reiniciar
-
-# chuva_ativa = False
-# contador_passadas = 0
-# inicio_chuva = None
-
-# def calcular_altura_mm(passadas):
-#     # Volume total em litros
-#     volume_l = passadas * volume_por_passada_ml / 1000
-#     # Altura em metros: volume / área
-#     altura_m = volume_l / area_coleta_m2
-#     # Converte para mm
-#     altura_mm = altura_m * 1000
-#     return round(altura_mm, 2)
-
-# try:
-#     print("Aguardando eventos do Arduino...\n")
-#     while True:
-#         linha = ser.readline().decode("utf-8").strip()
-#         if not linha:
-#             continue
-
-#         # Começo da chuva
-#         if "Evento: Chuva começou!" in linha:
-#             chuva_ativa = True
-#             contador_passadas = 0
-#             inicio_chuva = datetime.now()
-#             print(f"[{inicio_chuva}] Chuva começou!")
-
-#         # Contagem de passadas
-#         elif "Passadas atuais:" in linha and chuva_ativa:
-#             partes = linha.split(":")
-#             contador_passadas = int(partes[-1].strip())
-#             print(f"Passadas até agora: {contador_passadas}")
-
-#         # Fim da chuva
-#         elif ">>> Parou de chover." in linha and chuva_ativa:
-#             fim_chuva = datetime.now()
-#             altura_mm = calcular_altura_mm(contador_passadas)
-#             print(f"[{fim_chuva}] Chuva parou! Altura: {altura_mm} mm")
-
-#             # Envia para o Apps Script
-#             dados = {
-#                 "inicio": inicio_chuva.strftime("%d/%m/%Y %H:%M:%S"),
-#                 "fim": fim_chuva.strftime("%d/%m/%Y %H:%M:%S"),
-#                 "altura_mm": altura_mm
-#             }
-
-#             try:
-#                 resposta = requests.post(url_webapp, json=dados)
-#                 print("Dados enviados para a planilha:", resposta.json())
-#             except Exception as e:
-#                 print("Erro ao enviar dados:", e)
-
-#             # Reseta estado
-#             chuva_ativa = False
-#             contador_passadas = 0
-#             inicio_chuva = None
-
-# except KeyboardInterrupt:
-#     print("Programa finalizado pelo usuário.")
-# finally:
-#     ser.close()
